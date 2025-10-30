@@ -2,9 +2,9 @@ name: Full Test and Build Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   unit-and-integration-tests:
@@ -15,10 +15,12 @@ jobs:
         with:
           node-version: '20'
       - run: npm install
+      - name: Install Playwright Browsers/Dependencies
+        run: npx playwright install --with-deps
       - name: Run Jest Tests
         run: npm test
 
-  e2e-tests:
+  build:
     needs: unit-and-integration-tests
     runs-on: ubuntu-latest
     steps:
@@ -26,25 +28,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - run: npm install
+      - name: Build application
+        run: npm run build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: todo-app-linux
+          path: dist/
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb libgtk-3-0 libnss3 libxss1 \
-            libx11-xcb1 libxcomposite1 libxrandr2 libxdamage1 \
-            libxext6 libgbm1 libxshmfence1
-
-      - name: Run End-to-End Tests
-        env:
-          DISPLAY: ":99"   
-        run: |
-          xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" npm run test:e2e
-
-  build:
-    needs: e2e-tests
+  e2e-tests:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,5 +46,12 @@ jobs:
         with:
           node-version: '20'
       - run: npm install
-      - name: Build the app
-        run: npm run build
+      - name: Download application artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: todo-app-linux
+          path: dist/ 
+      - name: Install Playwright Browsers/Dependencies
+        run: npx playwright install --with-deps
+      - name: Run E2E Tests
+        run: npx playwright test
