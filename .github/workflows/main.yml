@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: '20'
       - run: npm install
-      - name: Run Unit and Integration Tests
+      - name: Run Jest Tests
         run: npm test
 
   e2e-tests:
@@ -30,21 +30,18 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install system dependencies for Electron
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb libgtk-3-0 libnss3 libxss1 \
             libx11-xcb1 libxcomposite1 libxrandr2 libxdamage1 \
             libxext6 libgbm1 libxshmfence1
-          sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
 
-      - name: Run E2E Tests (with virtual display)
+      - name: Run End-to-End Tests
         env:
-          DISPLAY: ":99"
+          DISPLAY: ":99"   
         run: |
-          Xvfb :99 -screen 0 1024x768x24 & sleep 3
-          npx playwright install
-          npm run test:e2e
+          xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" npm run test:e2e
 
   build:
     needs: e2e-tests
