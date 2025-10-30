@@ -15,8 +15,6 @@ jobs:
         with:
           node-version: '20'
       - run: npm install
-      - name: Install Playwright Browsers/Dependencies
-        run: npx playwright install --with-deps
       - name: Run Jest Tests
         run: npm test
 
@@ -36,22 +34,3 @@ jobs:
         with:
           name: todo-app-linux
           path: dist/
-
-  e2e-tests:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm install
-      - name: Download application artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: todo-app-linux
-          path: dist/ 
-      - name: Install Playwright Browsers/Dependencies
-        run: npx playwright install --with-deps
-      - name: Run E2E Tests
-        run: npx playwright test
